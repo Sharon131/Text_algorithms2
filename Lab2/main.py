@@ -57,10 +57,10 @@ def build_trie(text):
     return trie
 
 
-# trie = build_trie(second_string)
-#
-# print("level 0 ", trie.node_value)
-# trie.printChildren(1)
+trie = build_trie(second_string)
+
+print("level 0 ", trie.node_value)
+trie.printChildren(1)
 
 start1 = time.perf_counter()
 trie1 = build_trie(first_string)
