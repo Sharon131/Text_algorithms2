@@ -1,11 +1,10 @@
 from collections import defaultdict
 import queue
+import time
+from PIL import Image
 
 first_pattern = ["th", "th"]
 second_pattern = ["t h", "t h"]
-s_pattern = "s"
-k_pattern = "k"
-o_pattern = "o"
 
 
 class TrieNode:
@@ -147,18 +146,59 @@ def findPattern2D(lines, trie, vertical_trie):
     return positions
 
 
+def convertImageGrayscaleToListOfLists(img):
+    pixel_map = img.load()
+    pixels = []
+    for row in range(img.height):
+        pix = []
+        for col in range(img.width):
+            pix.append(pixel_map[col, row])
+        pixels.append(pix)
+    return pixels
+
+
+def findPattern2dWithTimeMeasurement(lines, patterns, pattern_name):
+    start = time.perf_counter_ns()
+    trie_basic, trie_vertical = prepareTries(patterns)
+    end = time.perf_counter_ns()
+    start2 = time.perf_counter_ns()
+    positions = findPattern2D(lines, trie_basic, trie_vertical)
+    end2 = time.perf_counter_ns()
+
+    print("Positions of pattern ", pattern_name, ":", positions)
+    print("Count of found positions: ", len(positions))
+    print("Prepare time: ", (end - start) / 1000000, " ms")
+    print("Searching time: ", (end2 - start2) / 1000000, " ms")
+
+
+def findPattern2dWithTimeMeasurementAndPartition(lines, patterns, pattern_name, parts_no):
+    print("Partition: ", parts_no)
+    partition = int(len(lines) / parts_no)
+    for i in range(parts_no):
+        findPattern2dWithTimeMeasurement(lines[partition*i:partition*(i+1)], patterns, pattern_name)
+        print("-")
+
+
 def findRepeatedCharactersInText(text):
     characters = set()
     positions = defaultdict(lambda: [])
     for line in text:
         for character in line:
-            characters.add(character)
+            if character not in ['\n', ' ', '\r', '0']:
+                characters.add(character)
 
     for character in characters:
         pattern = [character, character]
         trie_basic, trie_vertical = prepareTries(pattern)
         character_positions = findPattern2D(matrix_of_chars, trie_basic, trie_vertical)
         positions[character].extend(character_positions)
+
+    count = 0
+    for character in positions.keys():
+        if len(positions[character]) > 0:
+            print("Positions of two characters ", character, " in column:", positions[character])
+            count += len(positions[character])
+    print("Count of characters in the same position in two lines: ", count)
 
     return positions
 
@@ -181,15 +221,82 @@ test_positions = findPattern2D(matrix_of_chars, trie_basic_test, trie_vertical_t
 print("Positions: ", test_positions)
 
 print("-------------------------------")
-print("Find the same character:")
+print("Find the same characters:")
 
-# trie_basic, trie_vertical = prepareTries(["w", "w"])
-# test_positions = findPattern2D(matrix_of_chars, trie_basic, trie_vertical)
-# print("Positions: ", test_positions)
+findRepeatedCharactersInText(matrix_of_chars)
 
 print("-------------------------------")
-print("Find all th and t h:")
-#
-# trie_basic, trie_vertical = prepareTries(first_pattern)
-# test_positions = findPattern2D(matrix_of_chars, trie_basic, trie_vertical)
-# print("Positions: ", test_positions)
+print("Find all th:")
+
+findPattern2dWithTimeMeasurement(matrix_of_chars, first_pattern, "th")
+print("---")
+findPattern2dWithTimeMeasurementAndPartition(matrix_of_chars, first_pattern, "th", 2)
+print("---")
+findPattern2dWithTimeMeasurementAndPartition(matrix_of_chars, first_pattern, "th", 4)
+print("---")
+findPattern2dWithTimeMeasurementAndPartition(matrix_of_chars, first_pattern, "th", 8)
+print("---")
+
+print("Find all t h:")
+findPattern2dWithTimeMeasurement(matrix_of_chars, second_pattern, "t h")
+print("---")
+findPattern2dWithTimeMeasurementAndPartition(matrix_of_chars, first_pattern, "t h", 2)
+print("---")
+findPattern2dWithTimeMeasurementAndPartition(matrix_of_chars, first_pattern, "t h", 4)
+print("---")
+findPattern2dWithTimeMeasurementAndPartition(matrix_of_chars, first_pattern, "t h", 8)
+print("---")
+
+print("-------------------------------")
+img = Image.open('haystack.png').convert('L')
+haystack_img = convertImageGrayscaleToListOfLists(img)
+img = Image.open('s.png').convert('L')
+s_img = convertImageGrayscaleToListOfLists(img)
+img = Image.open('k.png').convert('L')
+k_img = convertImageGrayscaleToListOfLists(img)
+img = Image.open('o.png').convert('L')
+o_img = convertImageGrayscaleToListOfLists(img)
+
+print("Find all s:")
+findPattern2dWithTimeMeasurement(haystack_img, s_img, "s")
+print("---")
+findPattern2dWithTimeMeasurementAndPartition(haystack_img, s_img, "s", 2)
+print("---")
+findPattern2dWithTimeMeasurementAndPartition(haystack_img, s_img, "s", 4)
+print("---")
+findPattern2dWithTimeMeasurementAndPartition(haystack_img, s_img, "s", 8)
+print("---")
+
+print("Find all k:")
+findPattern2dWithTimeMeasurement(haystack_img, k_img, "k")
+print("---")
+findPattern2dWithTimeMeasurementAndPartition(haystack_img, k_img, "k", 2)
+print("---")
+findPattern2dWithTimeMeasurementAndPartition(haystack_img, k_img, "k", 4)
+print("---")
+findPattern2dWithTimeMeasurementAndPartition(haystack_img, k_img, "k", 8)
+print("---")
+
+print("Find all o:")
+findPattern2dWithTimeMeasurement(haystack_img, o_img, "o")
+print("---")
+findPattern2dWithTimeMeasurementAndPartition(haystack_img, o_img, "o", 2)
+print("---")
+findPattern2dWithTimeMeasurementAndPartition(haystack_img, o_img, "o", 4)
+print("---")
+findPattern2dWithTimeMeasurementAndPartition(haystack_img, o_img, "o", 8)
+print("---")
+
+print("-------------------------------")
+img = Image.open('pattern.png').convert('L')
+pattern_img = convertImageGrayscaleToListOfLists(img)
+findPattern2dWithTimeMeasurement(haystack_img, pattern_img, "p a t t e r n")
+print("---")
+findPattern2dWithTimeMeasurementAndPartition(haystack_img, pattern_img, "p a t t e r n", 2)
+print("---")
+findPattern2dWithTimeMeasurementAndPartition(haystack_img, pattern_img, "p a t t e r n", 4)
+print("---")
+findPattern2dWithTimeMeasurementAndPartition(haystack_img, pattern_img, "p a t t e r n", 8)
+print("---")
+
+
